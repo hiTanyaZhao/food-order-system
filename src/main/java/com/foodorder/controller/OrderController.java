@@ -54,8 +54,7 @@ public class OrderController {
                     case 9 -> viewEmployeeOrders();
                     case 10 -> cancelOrder();
                     case 11 -> deleteOrder();
-                    case 12 -> viewOrderStatistics();
-                    case 13 -> {
+                    case 12 -> {
                         System.out.println("Return to main menu...");
                         return;
                     }
@@ -91,10 +90,9 @@ public class OrderController {
         System.out.println("9. View employee orders");
         System.out.println("10. Cancel order");
         System.out.println("11. Delete order");
-        System.out.println("12. View order statistics");
-        System.out.println("13. Return to main menu");
+        System.out.println("12. Return to main menu");
         System.out.println("=".repeat(50));
-        System.out.print("Please select operation (1-13): ");
+        System.out.print("Please select operation (1-12): ");
     }
     
     /**
@@ -138,7 +136,7 @@ public class OrderController {
                 return;
             }
             
-            // Step 2: Employee assignment (simplified - just auto assign)
+            // Step 2: Employee assignment
             System.out.println("\nStep 2: Creating order with auto-assigned employee...");
             int orderId = orderService.createOrderWithAutoAssignment(customerId);
             
@@ -736,26 +734,6 @@ public class OrderController {
         }
     }
     
-    /**
-     * View order statistics
-     */
-    private void viewOrderStatistics() {
-        System.out.println("\n statisticsinformation");
-        System.out.println("=".repeat(35));
-        
-        try {
-            System.out.println(" basicstatistics:");
-            System.out.println("   order count: " + orderService.getTotalOrderCount());
-            System.out.println("   Handle: " + orderService.getOrderCountByStatus("PENDING"));
-            System.out.println("   complete: " + orderService.getOrderCountByStatus("COMPLETED"));
-            
-            orderService.printOrderStatistics();
-            orderService.printTodayOrderStatistics();
-            
-        } catch (Exception e) {
-            System.out.println(" statisticsinformationfailed: " + e.getMessage());
-        }
-    }
     
     /**
      * Get status description

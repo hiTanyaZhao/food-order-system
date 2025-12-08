@@ -1,11 +1,14 @@
 package com.foodorder.dao;
 
-import com.foodorder.config.DatabaseConnection;
-import com.foodorder.model.Customer;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.foodorder.config.DatabaseConnection;
+import com.foodorder.model.Customer;
 
 /**
  * Customer data access layer
@@ -258,7 +261,28 @@ public class CustomerDAO {
     }
     
     /**
-     * statisticsinformation
+     * Get customer order count using database function
+     */
+    public int getCustomerOrderCount(int customerId) {
+        String sql = "SELECT get_customer_order_count(?)";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting customer order count: " + e.getMessage());
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Customer statistics information
      */
     public void printCustomerStatistics() {
         String sql = """

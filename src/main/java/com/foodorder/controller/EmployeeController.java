@@ -33,15 +33,12 @@ public class EmployeeController {
                 switch (choice) {
                     case 1 -> createEmployee();
                     case 2 -> viewAllEmployees();
-                    case 3 -> viewAvailableEmployees();
-                    case 4 -> searchEmployees();
-                    case 5 -> viewEmployeeDetails();
-                    case 6 -> updateEmployee();
-                    case 7 -> updateEmployeeAvailability();
-                    case 8 -> deleteEmployee();
-                    case 9 -> viewEmployeeStatistics();
-                    case 10 -> viewWorkloadStatistics();
-                    case 11 -> {
+                    case 3 -> searchEmployees();
+                    case 4 -> viewEmployeeDetails();
+                    case 5 -> updateEmployee();
+                    case 6 -> updateEmployeeAvailability();
+                    case 7 -> deleteEmployee();
+                    case 8 -> {
                         System.out.println("Return to main menu...");
                         return;
                     }
@@ -68,17 +65,14 @@ public class EmployeeController {
         System.out.println("=".repeat(50));
         System.out.println("1. Add new employee");
         System.out.println("2. View all employees");
-        System.out.println("3. View available employees");
-        System.out.println("4. Search employees");
-        System.out.println("5. View employee details");
-        System.out.println("6. Update employee information");
-        System.out.println("7. Update employee status");
-        System.out.println("8. Delete employee");
-        System.out.println("9. View employee statistics");
-        System.out.println("10. View workload statistics");
-        System.out.println("11. Return to main menu");
+        System.out.println("3. Search employees");
+        System.out.println("4. View employee details");
+        System.out.println("5. Update employee information");
+        System.out.println("6. Update employee status");
+        System.out.println("7. Delete employee");
+        System.out.println("8. Return to main menu");
         System.out.println("=".repeat(50));
-        System.out.print("Please select operation (1-11): ");
+        System.out.print("Please select operation (1-8): ");
     }
     
     /**
@@ -146,36 +140,6 @@ public class EmployeeController {
         }
     }
     
-    /**
-     * View available employees
-     */
-    private void viewAvailableEmployees() {
-        System.out.println("\nAvailable Employees");
-        System.out.println("=".repeat(35));
-        
-        try {
-            List<Employee> employees = employeeService.getAvailableEmployees();
-            
-            if (employees.isEmpty()) {
-                System.out.println("No available employees found.");
-            } else {
-                System.out.printf("%-4s %-20s %-15s%n", "ID", "Name", "Phone");
-                System.out.println("-".repeat(42));
-                
-                employees.forEach(employee -> 
-                    System.out.printf("%-4d %-20s %-15s%n",
-                        employee.getEmployeeId(),
-                        employee.getName(),
-                        employee.getPhone() != null ? employee.getPhone() : "Not provided")
-                );
-                
-                System.out.println("\nAvailable employees: " + employees.size());
-            }
-            
-        } catch (Exception e) {
-            System.out.println("Failed to retrieve available employees: " + e.getMessage());
-        }
-    }
     
     /**
      * Search employees
@@ -386,38 +350,7 @@ public class EmployeeController {
         }
     }
     
-    /**
-     * View employee statistics
-     */
-    private void viewEmployeeStatistics() {
-        System.out.println("\nEmployee Statistics");
-        System.out.println("=".repeat(35));
-        
-        try {
-            System.out.println("Basic statistics:");
-            System.out.println("  - Total employee count: " + employeeService.getTotalEmployeeCount());
-            System.out.println("  - Available employees: " + employeeService.getAvailableEmployeeCount());
-            
-            employeeService.printEmployeeStatistics();
-            
-        } catch (Exception e) {
-            System.out.println("Failed to retrieve employee statistics: " + e.getMessage());
-        }
-    }
     
-    /**
-     * View workload statistics
-     */
-    private void viewWorkloadStatistics() {
-        System.out.println("\nEmployee Workload Statistics");
-        System.out.println("=".repeat(40));
-        
-        try {
-            employeeService.printEmployeeWorkloadStatistics();
-        } catch (Exception e) {
-            System.out.println("Failed to retrieve workload statistics: " + e.getMessage());
-        }
-    }
     
     /**
      * Select an employee from the list

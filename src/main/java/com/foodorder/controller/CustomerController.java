@@ -37,9 +37,7 @@ public class CustomerController {
                     case 4 -> viewCustomerDetails();
                     case 5 -> updateCustomer();
                     case 6 -> deleteCustomer();
-                    case 7 -> customerLogin();
-                    case 8 -> viewCustomerStatistics();
-                    case 9 -> {
+                    case 7 -> {
                         System.out.println("Return to main menu...");
                         return;
                     }
@@ -70,11 +68,9 @@ public class CustomerController {
         System.out.println("4. View customer details");
         System.out.println("5. Update customer information");
         System.out.println("6. Delete customer");
-        System.out.println("7. Customer login");
-        System.out.println("8. View customer statistics");
-        System.out.println("9. Return to main menu");
+        System.out.println("7. Return to main menu");
         System.out.println("=".repeat(50));
-        System.out.print("Please select operation (1-9): ");
+        System.out.print("Please select operation (1-7): ");
     }
     
     /**
@@ -306,45 +302,7 @@ public class CustomerController {
         }
     }
     
-    /**
-     * Customer login
-     */
-    private void customerLogin() {
-        System.out.println("\nCustomer Login");
-        System.out.println("=".repeat(30));
-        
-        try {
-            System.out.print("Please enter email address: ");
-            String email = scanner.nextLine().trim();
-            
-            Customer customer = customerService.authenticateCustomer(email);
-            
-            System.out.println("✓ Login successful!");
-            System.out.println("Welcome, " + customer.getName() + "!");
-            System.out.println("Customer ID: " + customer.getCustomerId());
-            
-        } catch (Exception e) {
-            System.out.println("Login failed: " + e.getMessage());
-        }
-    }
     
-    /**
-     * View customer statistics
-     */
-    private void viewCustomerStatistics() {
-        System.out.println("\nCustomer Statistics");
-        System.out.println("=".repeat(35));
-        
-        try {
-            System.out.println("Basic statistics:");
-            System.out.println("  - Total customer count: " + customerService.getTotalCustomerCount());
-            
-            customerService.printCustomerStatistics();
-            
-        } catch (Exception e) {
-            System.out.println("Failed to retrieve customer statistics: " + e.getMessage());
-        }
-    }
     
     /**
      * Select a customer

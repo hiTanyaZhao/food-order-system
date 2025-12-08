@@ -213,9 +213,16 @@ public class EmployeeService {
     }
     
     /**
-     * Get available employee count
+     * Get available employee count using database function
      */
     public int getAvailableEmployeeCount() {
+        return employeeDAO.getAvailableEmployeesCount();
+    }
+    
+    /**
+     * Get available employee count (legacy method for compatibility)
+     */
+    public int getAvailableEmployeeCountLegacy() {
         return employeeDAO.getAvailableEmployees().size();
     }
     

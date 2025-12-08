@@ -297,6 +297,33 @@ public class MenuDAO {
     }
     
     /**
+     * Get menu with category using database view
+     */
+    public List<MenuItem> getMenuWithCategoryFromView() {
+        String sql = "SELECT * FROM menu_with_category WHERE is_active = true ORDER BY category_name, item_name";
+        List<MenuItem> menuItems = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                MenuItem item = new MenuItem();
+                item.setItemId(rs.getInt("item_id"));
+                item.setItemName(rs.getString("item_name"));
+                item.setCurrentPrice(rs.getBigDecimal("current_price"));
+                item.setActive(rs.getBoolean("is_active"));
+                item.setCategoryId(rs.getInt("category_id"));
+                // Category name is available in the view but not in MenuItem model
+                menuItems.add(item);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting menu with category from view: " + e.getMessage());
+        }
+        
+        return menuItems;
+    }
+    
+    /**
      * Get menu statistics information
      */
     public void printMenuStatistics() {

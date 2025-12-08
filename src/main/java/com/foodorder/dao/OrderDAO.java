@@ -325,34 +325,116 @@ public class OrderDAO {
     }
     
     /**
-     * CalculateUpdate ordertotal amount
+     * Calculate order total using database function
      */
-    public boolean recalculateOrderTotal(int orderId) {
-        String sql = """
-            UPDATE Orders 
-            SET total_amount = (
-                SELECT COALESCE(SUM(oi.quantity * m.current_price), 0)
-                FROM OrderItem oi
-                JOIN MenuItem m ON oi.item_id = m.item_id
-                WHERE oi.order_id = ?
-            )
-            WHERE order_id = ?
-            """;
+    public BigDecimal calculateOrderTotalUsingFunction(int orderId) {
+        String sql = "SELECT calculate_order_total(?)";
         
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, orderId);
-            stmt.setInt(2, orderId);
             
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBigDecimal(1);
+                }
+            }
         } catch (SQLException e) {
-            System.err.println("Error recalculating order total: " + e.getMessage());
+            System.err.println("Error calculating order total using function: " + e.getMessage());
+        }
+        
+        return BigDecimal.ZERO;
+    }
+    
+    /**
+     * Update order total using database procedure
+     */
+    public boolean updateOrderTotalUsingProcedure(int orderId) {
+        String sql = "CALL update_order_total(?)";
+        
+        try (CallableStatement stmt = connection.prepareCall(sql)) {
+            stmt.setInt(1, orderId);
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error updating order total using procedure: " + e.getMessage());
             return false;
         }
     }
     
     /**
-     * statisticsinformation
+     * Check if menu item is available using database function
+     */
+    public boolean isMenuItemAvailable(int itemId) {
+        String sql = "SELECT is_menu_item_available(?)";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, itemId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking menu item availability: " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Auto assign employee using database procedure
+     */
+    public boolean assignEmployeeToOrder(int orderId) {
+        String sql = "CALL assign_employee_to_order(?)";
+        
+        try (CallableStatement stmt = connection.prepareCall(sql)) {
+            stmt.setInt(1, orderId);
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error assigning employee to order: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Legacy method - kept for compatibility but triggers now handle this automatically
+     */
+    public boolean recalculateOrderTotal(int orderId) {
+        // Use the new procedure instead of complex SQL
+        return updateOrderTotalUsingProcedure(orderId);
+    }
+    
+    /**
+     * Get order summary using database view
+     */
+    public List<Order> getOrderSummaryFromView() {
+        String sql = "SELECT * FROM order_summary ORDER BY order_time DESC";
+        List<Order> orders = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                Order order = new Order();
+                order.setOrderId(rs.getInt("order_id"));
+                order.setCustomerName(rs.getString("customer_name"));
+                order.setEmployeeName(rs.getString("employee_name"));
+                order.setOrderTime(rs.getTimestamp("order_time"));
+                order.setTotalAmount(rs.getBigDecimal("total_amount"));
+                order.setCurrentStatus(rs.getString("current_status"));
+                orders.add(order);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting order summary from view: " + e.getMessage());
+        }
+        
+        return orders;
+    }
+    
+    /**
+     * Order statistics using enhanced queries
      */
     public void printOrderStatistics() {
         String sql = """

@@ -171,11 +171,11 @@ public class OrderService {
     }
     
     /**
-     * Add order items
+     * Add order items - uses database triggers for automatic total calculation
      */
     public boolean addOrderItem(int orderId, int itemId, int quantity) {
         if (orderId <= 0) {
-            throw new IllegalArgumentException("order IDmust be greater than0");
+            throw new IllegalArgumentException("Order ID must be greater than 0");
         }
         
         if (itemId <= 0) {
@@ -184,6 +184,11 @@ public class OrderService {
         
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than 0");
+        }
+        
+        // Check if menu item is available using database function
+        if (!isMenuItemAvailable(itemId)) {
+            throw new IllegalArgumentException("Menu item is not available");
         }
         
         // Check if order exists and can be modified
@@ -197,28 +202,50 @@ public class OrderService {
                 order.getCurrentStatus() + "'. Only PENDING orders can be modified.");
         }
         
-        // Check ifalready exists
+        // Check if item already exists in order
         if (orderItemDAO.orderItemExists(orderId, itemId)) {
-            // already existsupdatequantity
+            // If already exists, update quantity
             OrderItem existingItem = orderItemDAO.getOrderItem(orderId, itemId);
             int newQuantity = existingItem.getQuantity() + quantity;
             return updateOrderItemQuantity(orderId, itemId, newQuantity);
         } else {
-            // add
+            // Add new item - trigger will automatically update order total
             OrderItem orderItem = new OrderItem(orderId, itemId, quantity);
-            boolean success = orderItemDAO.addOrderItem(orderItem);
-            
-            if (success) {
-                // Calculatetotal amount
-                recalculateOrderTotal(orderId);
-            }
-            
-            return success;
+            return orderItemDAO.addOrderItem(orderItem);
+            // No need to manually call recalculateOrderTotal() - trigger handles it!
         }
     }
     
     /**
-     * updatequantity
+     * Check if menu item is available using database function
+     */
+    private boolean isMenuItemAvailable(int itemId) {
+        return orderDAO.isMenuItemAvailable(itemId);
+    }
+    
+    /**
+     * Get order total using database function
+     */
+    public BigDecimal getOrderTotal(int orderId) {
+        return orderDAO.calculateOrderTotalUsingFunction(orderId);
+    }
+    
+    /**
+     * Get available employees count using database function
+     */
+    public int getAvailableEmployeesCount() {
+        return employeeDAO.getAvailableEmployeesCount();
+    }
+    
+    /**
+     * Auto assign employee using database procedure
+     */
+    public boolean autoAssignEmployee(int orderId) {
+        return orderDAO.assignEmployeeToOrder(orderId);
+    }
+    
+    /**
+     * Update order item quantity - trigger will automatically update total
      */
     public boolean updateOrderItemQuantity(int orderId, int itemId, int newQuantity) {
         if (orderId <= 0) {
@@ -244,14 +271,9 @@ public class OrderService {
                 getStatusDescription(order.getCurrentStatus()) + "'modify");
         }
         
-        boolean success = orderItemDAO.updateOrderItemQuantity(orderId, itemId, newQuantity);
-        
-        if (success) {
-            // Calculatetotal amount
-            recalculateOrderTotal(orderId);
-        }
-        
-        return success;
+        // Update quantity - trigger will automatically update order total
+        return orderItemDAO.updateOrderItemQuantity(orderId, itemId, newQuantity);
+        // No need to manually recalculate - trigger handles it automatically!
     }
     
     /**

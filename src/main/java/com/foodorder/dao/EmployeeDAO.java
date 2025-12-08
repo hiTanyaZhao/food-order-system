@@ -299,7 +299,51 @@ public class EmployeeDAO {
     }
     
     /**
-     * statisticsinformation
+     * Get available employees count using database function
+     */
+    public int getAvailableEmployeesCount() {
+        String sql = "SELECT get_available_employees_count()";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting available employees count: " + e.getMessage());
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Get employee workload using database view
+     */
+    public List<Employee> getEmployeeWorkloadFromView() {
+        String sql = "SELECT * FROM employee_workload ORDER BY total_orders DESC";
+        List<Employee> employees = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                Employee employee = new Employee();
+                employee.setEmployeeId(rs.getInt("employee_id"));
+                employee.setName(rs.getString("employee_name"));
+                employee.setAvailabilityStatus(rs.getBoolean("availability_status"));
+                // Additional workload fields could be added to Employee model
+                employees.add(employee);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting employee workload from view: " + e.getMessage());
+        }
+        
+        return employees;
+    }
+    
+    /**
+     * Employee statistics information
      */
     public void printEmployeeStatistics() {
         String sql = """

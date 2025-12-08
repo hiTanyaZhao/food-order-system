@@ -29,7 +29,7 @@ public class MenuController {
         while (true) {
             try {
                 displayMenuOptions();
-                System.out.print("Please select operation (1-5): ");
+                System.out.print("Please select operation (1-4): ");
                 
                 int choice = scanner.nextInt();
                 scanner.nextLine(); // consume newline
@@ -38,8 +38,7 @@ public class MenuController {
                     case 1 -> viewAllMenuItems();
                     case 2 -> browseMenuByCategory();
                     case 3 -> searchMenuByName();
-                    case 4 -> viewMenuStatistics();
-                    case 5 -> {
+                    case 4 -> {
                         System.out.println("Returning to main menu...");
                         return;
                     }
@@ -66,8 +65,7 @@ public class MenuController {
         System.out.println("1. Browse all menu items");
         System.out.println("2. Browse by category");
         System.out.println("3. Search by name");
-        System.out.println("4. View menu statistics");
-        System.out.println("5. Return to main menu");
+        System.out.println("4. Return to main menu");
         System.out.println("=".repeat(50));
     }
     
@@ -201,29 +199,4 @@ public class MenuController {
         }
     }
     
-    /**
-     * View menu statistics
-     */
-    private void viewMenuStatistics() {
-        System.out.println("\nMenu Statistics");
-        System.out.println("=".repeat(40));
-        
-        try {
-            System.out.println("Total Categories: " + menuService.getTotalCategoryCount());
-            System.out.println("Total Menu Items: " + menuService.getTotalMenuItemCount());
-            
-            // Show category breakdown
-            System.out.println("\nItems per Category:");
-            System.out.println("-".repeat(30));
-            
-            List<Category> categories = menuService.getAllCategories();
-            for (Category category : categories) {
-                List<MenuItem> items = menuService.getMenuItemsByCategory(category.getCategoryId());
-                System.out.println(category.getName() + ": " + items.size() + " items");
-            }
-            
-        } catch (Exception e) {
-            System.err.println("Error loading statistics: " + e.getMessage());
-        }
-    }
 }

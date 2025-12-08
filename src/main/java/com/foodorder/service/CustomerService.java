@@ -195,20 +195,15 @@ public class CustomerService {
         return customerDAO.getAllCustomers().size();
     }
     
+    
     /**
-     * Customer loginValidate
+     * Get customer order count using database function
      */
-    public Customer authenticateCustomer(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("email addresscannot be empty");
+    public int getCustomerOrderCount(int customerId) {
+        if (customerId <= 0) {
+            throw new IllegalArgumentException("Customer ID must be greater than 0");
         }
-        
-        Customer customer = customerDAO.getCustomerByEmail(email.trim());
-        if (customer == null) {
-            throw new IllegalArgumentException("Customer does not exist or not registered");
-        }
-        
-        return customer;
+        return customerDAO.getCustomerOrderCount(customerId);
     }
     
     /**
