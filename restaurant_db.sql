@@ -1,4 +1,3 @@
--- 清理旧表（注意顺序，先删有外键依赖的表）
 DROP TABLE IF EXISTS OrderItem;
 DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS MenuItem;

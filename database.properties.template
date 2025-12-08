@@ -1,0 +1,26 @@
+# Database Connection Configuration Template
+# Copy this file to src/main/resources/database.properties and modify the values below
+
+# PostgreSQL database connection information
+# Modify these values according to your local PostgreSQL setup
+db.url=jdbc:postgresql://localhost:5432/restaurant_db
+db.username=your_username
+db.password=your_password
+db.driver=org.postgresql.Driver
+
+# Connection pool configuration (usually no need to change)
+db.pool.maxConnections=10
+db.pool.minConnections=2
+db.pool.connectionTimeout=30000
+
+# Common PostgreSQL configurations:
+# Default PostgreSQL port: 5432
+# If using Homebrew PostgreSQL: usually port 5432
+# If using custom installation: check your PostgreSQL configuration
+
+# Setup Instructions:
+# 1. Install PostgreSQL on your system
+# 2. Create database: createdb restaurant_db
+# 3. Run the SQL script: psql -d restaurant_db -f restaurant_db.sql
+# 4. Update the values above with your PostgreSQL configuration
+# 5. Copy this file to src/main/resources/database.properties
