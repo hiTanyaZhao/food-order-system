@@ -224,4 +224,109 @@ public class MenuService {
                 .limit(5)  // quantity
                 .collect(Collectors.toList());
     }
+    
+    
+    /**
+     * Add new menu item
+     */
+    public int addMenuItem(int categoryId, String itemName, BigDecimal price, boolean isActive) {
+        // Validate category ID
+        if (categoryId <= 0) {
+            throw new IllegalArgumentException("Category ID must be greater than 0");
+        }
+        
+        // Validate item name
+        if (itemName == null || itemName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Item name cannot be empty");
+        }
+        
+        // Validate price
+        if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Price must be non-negative");
+        }
+        
+        // Check if category exists
+        List<Category> categories = menuDAO.getAllCategories();
+        boolean categoryExists = categories.stream()
+                .anyMatch(c -> c.getCategoryId() == categoryId);
+        if (!categoryExists) {
+            throw new IllegalArgumentException("Category does not exist");
+        }
+        
+        return menuDAO.addMenuItem(categoryId, itemName.trim(), price, isActive);
+    }
+    
+    /**
+     * Update menu item
+     */
+    public boolean updateMenuItem(int itemId, String itemName, BigDecimal price, int categoryId) {
+        // Validate item ID
+        if (itemId <= 0) {
+            throw new IllegalArgumentException("Item ID must be greater than 0");
+        }
+        
+        // Validate item name
+        if (itemName == null || itemName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Item name cannot be empty");
+        }
+        
+        // Validate price
+        if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Price must be non-negative");
+        }
+        
+        // Validate category ID
+        if (categoryId <= 0) {
+            throw new IllegalArgumentException("Category ID must be greater than 0");
+        }
+        
+        // Check if item exists
+        MenuItem existingItem = menuDAO.getMenuItemById(itemId);
+        if (existingItem == null) {
+            throw new IllegalArgumentException("Menu item does not exist");
+        }
+        
+        return menuDAO.updateMenuItem(itemId, itemName.trim(), price, categoryId);
+    }
+    
+    /**
+     * Activate or deactivate menu item
+     */
+    public boolean setMenuItemActive(int itemId, boolean isActive) {
+        // Validate item ID
+        if (itemId <= 0) {
+            throw new IllegalArgumentException("Item ID must be greater than 0");
+        }
+        
+        // Check if item exists
+        MenuItem existingItem = menuDAO.getMenuItemById(itemId);
+        if (existingItem == null) {
+            throw new IllegalArgumentException("Menu item does not exist");
+        }
+        
+        return menuDAO.setMenuItemActive(itemId, isActive);
+    }
+    
+    /**
+     * Update menu item price
+     */
+    public boolean updateMenuItemPrice(int itemId, BigDecimal newPrice) {
+        // Validate item ID
+        if (itemId <= 0) {
+            throw new IllegalArgumentException("Item ID must be greater than 0");
+        }
+        
+        // Validate price
+        if (newPrice == null || newPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Price must be non-negative");
+        }
+        
+        // Check if item exists
+        MenuItem existingItem = menuDAO.getMenuItemById(itemId);
+        if (existingItem == null) {
+            throw new IllegalArgumentException("Menu item does not exist");
+        }
+        
+        return menuDAO.updateMenuItemPrice(itemId, newPrice);
+    }
 }

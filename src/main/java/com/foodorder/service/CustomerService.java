@@ -222,7 +222,18 @@ public class CustomerService {
         sb.append("Email: ").append(customer.getEmail()).append("\n");
         sb.append("Phone: ").append(customer.getPhone() != null ? customer.getPhone() : "Not provided").append("\n");
         sb.append("Order History: ").append(hasOrders(customerId) ? "Has order history" : "No orders yet").append("\n");
+        sb.append("Cumulative Spend: $").append(getCustomerCumulativeSpend(customerId)).append("\n");
         
         return sb.toString();
+    }
+    
+    /**
+     * Get customer cumulative spend (total amount from completed orders)
+     */
+    public java.math.BigDecimal getCustomerCumulativeSpend(int customerId) {
+        if (customerId <= 0) {
+            throw new IllegalArgumentException("Customer ID must be greater than 0");
+        }
+        return customerDAO.getCustomerCumulativeSpend(customerId);
     }
 }

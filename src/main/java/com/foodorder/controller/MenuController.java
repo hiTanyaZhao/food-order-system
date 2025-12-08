@@ -1,5 +1,6 @@
 package com.foodorder.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -9,8 +10,8 @@ import com.foodorder.model.MenuItem;
 import com.foodorder.service.MenuService;
 
 /**
- * Menu Controller - Simplified Version
- * Handle menu browsing and search functionality
+ * Menu Controller - Full Version with CRUD operations
+ * Handle menu browsing, search and management functionality
  */
 public class MenuController {
     
@@ -29,16 +30,20 @@ public class MenuController {
         while (true) {
             try {
                 displayMenuOptions();
-                System.out.print("Please select operation (1-4): ");
+                System.out.print("Please select operation (1-9): ");
                 
-                int choice = scanner.nextInt();
-                scanner.nextLine(); // consume newline
+                int choice = Integer.parseInt(scanner.nextLine().trim());
                 
                 switch (choice) {
                     case 1 -> viewAllMenuItems();
                     case 2 -> browseMenuByCategory();
                     case 3 -> searchMenuByName();
-                    case 4 -> {
+                    case 4 -> addMenuItem();
+                    case 5 -> updateMenuItem();
+                    case 6 -> updateMenuItemPrice();
+                    case 7 -> toggleMenuItemStatus();
+                    case 8 -> viewMenuItemDetails();
+                    case 9 -> {
                         System.out.println("Returning to main menu...");
                         return;
                     }
@@ -48,9 +53,10 @@ public class MenuController {
                 System.out.println("\nPress Enter to continue...");
                 scanner.nextLine();
                 
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number.");
             } catch (Exception e) {
                 System.out.println("Error occurred: " + e.getMessage());
-                scanner.nextLine(); // clear invalid input
             }
         }
     }
@@ -60,12 +66,20 @@ public class MenuController {
      */
     private void displayMenuOptions() {
         System.out.println("\n" + "=".repeat(50));
-        System.out.println("             Menu Browse System");
+        System.out.println("           Menu Management System");
         System.out.println("=".repeat(50));
+        System.out.println("--- Browse ---");
         System.out.println("1. Browse all menu items");
         System.out.println("2. Browse by category");
         System.out.println("3. Search by name");
-        System.out.println("4. Return to main menu");
+        System.out.println("--- Management ---");
+        System.out.println("4. Add new menu item");
+        System.out.println("5. Update menu item");
+        System.out.println("6. Update price");
+        System.out.println("7. Activate/Deactivate item");
+        System.out.println("8. View item details");
+        System.out.println("---");
+        System.out.println("9. Return to main menu");
         System.out.println("=".repeat(50));
     }
     
@@ -199,4 +213,242 @@ public class MenuController {
         }
     }
     
+    /**
+     * Add new menu item
+     */
+    private void addMenuItem() {
+        System.out.println("\nAdd New Menu Item");
+        System.out.println("=".repeat(40));
+        
+        try {
+            // Display categories for selection
+            List<Category> categories = menuService.getAllCategories();
+            if (categories.isEmpty()) {
+                System.out.println("No categories available. Please add categories first.");
+                return;
+            }
+            
+            System.out.println("Available categories:");
+            for (int i = 0; i < categories.size(); i++) {
+                System.out.println((i + 1) + ". " + categories.get(i).getName());
+            }
+            
+            System.out.print("Select category (1-" + categories.size() + "): ");
+            int categoryChoice = Integer.parseInt(scanner.nextLine().trim());
+            
+            if (categoryChoice < 1 || categoryChoice > categories.size()) {
+                System.out.println("Invalid category selection.");
+                return;
+            }
+            
+            int categoryId = categories.get(categoryChoice - 1).getCategoryId();
+            
+            System.out.print("Enter item name: ");
+            String itemName = scanner.nextLine().trim();
+            
+            if (itemName.isEmpty()) {
+                System.out.println("Item name cannot be empty.");
+                return;
+            }
+            
+            System.out.print("Enter price: $");
+            BigDecimal price = new BigDecimal(scanner.nextLine().trim());
+            
+            System.out.print("Is active? (Y/n): ");
+            String activeInput = scanner.nextLine().trim().toLowerCase();
+            boolean isActive = activeInput.isEmpty() || "y".equals(activeInput) || "yes".equals(activeInput);
+            
+            int newItemId = menuService.addMenuItem(categoryId, itemName, price, isActive);
+            
+            if (newItemId > 0) {
+                System.out.println("✓ Menu item added successfully! Item ID: " + newItemId);
+            } else {
+                System.out.println("✗ Failed to add menu item.");
+            }
+            
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter valid numbers.");
+        } catch (Exception e) {
+            System.out.println("Error adding menu item: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Update menu item
+     */
+    private void updateMenuItem() {
+        System.out.println("\nUpdate Menu Item");
+        System.out.println("=".repeat(40));
+        
+        try {
+            System.out.print("Enter item ID to update: ");
+            int itemId = Integer.parseInt(scanner.nextLine().trim());
+            
+            // Get current item info
+            MenuItem existingItem = menuService.getMenuItemById(itemId);
+            if (existingItem == null) {
+                System.out.println("Menu item not found.");
+                return;
+            }
+            
+            System.out.println("\nCurrent item information:");
+            System.out.println("Name: " + existingItem.getItemName());
+            System.out.println("Category: " + existingItem.getCategoryName());
+            System.out.println("Price: " + existingItem.getFormattedPrice());
+            System.out.println("Status: " + (existingItem.isActive() ? "Active" : "Inactive"));
+            
+            System.out.println("\nEnter new information (press Enter to keep current value):");
+            
+            // Get new name
+            System.out.print("New name [" + existingItem.getItemName() + "]: ");
+            String newName = scanner.nextLine().trim();
+            if (newName.isEmpty()) newName = existingItem.getItemName();
+            
+            // Get new price
+            System.out.print("New price [" + existingItem.getCurrentPrice() + "]: $");
+            String priceInput = scanner.nextLine().trim();
+            BigDecimal newPrice = priceInput.isEmpty() ? existingItem.getCurrentPrice() : new BigDecimal(priceInput);
+            
+            // Get new category
+            List<Category> categories = menuService.getAllCategories();
+            System.out.println("\nAvailable categories:");
+            for (int i = 0; i < categories.size(); i++) {
+                System.out.println((i + 1) + ". " + categories.get(i).getName());
+            }
+            System.out.print("Select new category (Enter to keep current): ");
+            String categoryInput = scanner.nextLine().trim();
+            int newCategoryId = existingItem.getCategoryId();
+            if (!categoryInput.isEmpty()) {
+                int categoryChoice = Integer.parseInt(categoryInput);
+                if (categoryChoice >= 1 && categoryChoice <= categories.size()) {
+                    newCategoryId = categories.get(categoryChoice - 1).getCategoryId();
+                }
+            }
+            
+            boolean success = menuService.updateMenuItem(itemId, newName, newPrice, newCategoryId);
+            
+            if (success) {
+                System.out.println("✓ Menu item updated successfully!");
+            } else {
+                System.out.println("✗ Failed to update menu item.");
+            }
+            
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter valid numbers.");
+        } catch (Exception e) {
+            System.out.println("Error updating menu item: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Update menu item price only
+     */
+    private void updateMenuItemPrice() {
+        System.out.println("\nUpdate Menu Item Price");
+        System.out.println("=".repeat(40));
+        
+        try {
+            System.out.print("Enter item ID: ");
+            int itemId = Integer.parseInt(scanner.nextLine().trim());
+            
+            // Get current item info
+            MenuItem existingItem = menuService.getMenuItemById(itemId);
+            if (existingItem == null) {
+                System.out.println("Menu item not found.");
+                return;
+            }
+            
+            System.out.println("Item: " + existingItem.getItemName());
+            System.out.println("Current price: " + existingItem.getFormattedPrice());
+            
+            System.out.print("Enter new price: $");
+            BigDecimal newPrice = new BigDecimal(scanner.nextLine().trim());
+            
+            boolean success = menuService.updateMenuItemPrice(itemId, newPrice);
+            
+            if (success) {
+                System.out.println("✓ Price updated successfully!");
+                System.out.println("New price: $" + newPrice);
+            } else {
+                System.out.println("✗ Failed to update price.");
+            }
+            
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter valid numbers.");
+        } catch (Exception e) {
+            System.out.println("Error updating price: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Toggle menu item active status
+     */
+    private void toggleMenuItemStatus() {
+        System.out.println("\nActivate/Deactivate Menu Item");
+        System.out.println("=".repeat(40));
+        
+        try {
+            System.out.print("Enter item ID: ");
+            int itemId = Integer.parseInt(scanner.nextLine().trim());
+            
+            // Get current item info
+            MenuItem existingItem = menuService.getMenuItemById(itemId);
+            if (existingItem == null) {
+                System.out.println("Menu item not found.");
+                return;
+            }
+            
+            System.out.println("Item: " + existingItem.getItemName());
+            System.out.println("Current status: " + (existingItem.isActive() ? "Active" : "Inactive"));
+            
+            System.out.print("Set as active? (Y/n): ");
+            String activeInput = scanner.nextLine().trim().toLowerCase();
+            boolean newStatus = activeInput.isEmpty() || "y".equals(activeInput) || "yes".equals(activeInput);
+            
+            boolean success = menuService.setMenuItemActive(itemId, newStatus);
+            
+            if (success) {
+                System.out.println("✓ Status updated successfully!");
+                System.out.println("New status: " + (newStatus ? "Active" : "Inactive"));
+            } else {
+                System.out.println("✗ Failed to update status.");
+            }
+            
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter a valid item ID.");
+        } catch (Exception e) {
+            System.out.println("Error updating status: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * View menu item details
+     */
+    private void viewMenuItemDetails() {
+        System.out.println("\nMenu Item Details");
+        System.out.println("=".repeat(40));
+        
+        try {
+            System.out.print("Enter item ID: ");
+            int itemId = Integer.parseInt(scanner.nextLine().trim());
+            
+            MenuItem item = menuService.getMenuItemById(itemId);
+            if (item == null) {
+                System.out.println("Menu item not found.");
+                return;
+            }
+            
+            System.out.println("\n=== Menu Item Details ===");
+            System.out.println("ID: " + item.getItemId());
+            System.out.println("Name: " + item.getItemName());
+            System.out.println("Category: " + item.getCategoryName());
+            System.out.println("Price: " + item.getFormattedPrice());
+            System.out.println("Status: " + (item.isActive() ? "Active" : "Inactive"));
+            
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter a valid item ID.");
+        } catch (Exception e) {
+            System.out.println("Error viewing item details: " + e.getMessage());
+        }
+    }
 }
