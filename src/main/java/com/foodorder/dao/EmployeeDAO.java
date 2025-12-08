@@ -286,7 +286,7 @@ public class EmployeeDAO {
             while (rs.next()) {
                 System.out.printf("%-20s %-8s %-8d %-8d %-8d %-8d%n",
                     rs.getString("name"),
-                    rs.getBoolean("availability_status") ? "available" : "available",
+                    rs.getBoolean("availability_status") ? "available" : "unavailable",
                     rs.getInt("total_orders"),
                     rs.getInt("pending_orders"),
                     rs.getInt("preparing_orders"),

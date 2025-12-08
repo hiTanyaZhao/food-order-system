@@ -367,4 +367,72 @@ public class MenuDAO {
             System.err.println("Error fetching menu statistics: " + e.getMessage());
         }
     }
+
+    /**
+     * Add new menu item
+     */
+    public int addMenuItem(int categoryId, String itemName, BigDecimal price, boolean isActive) {
+        String sql = "INSERT INTO MenuItem (category_id, item_name, current_price, is_active) VALUES (?, ?, ?, ?) RETURNING item_id";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, categoryId);
+            stmt.setString(2, itemName);
+            stmt.setBigDecimal(3, price);
+            stmt.setBoolean(4, isActive);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("item_id");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error adding menu item: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    /**
+     * Update menu item
+     */
+    public boolean updateMenuItem(int itemId, String itemName, BigDecimal price, int categoryId) {
+        String sql = "UPDATE MenuItem SET item_name = ?, current_price = ?, category_id = ? WHERE item_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, itemName);
+            stmt.setBigDecimal(2, price);
+            stmt.setInt(3, categoryId);
+            stmt.setInt(4, itemId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating menu item: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Activate or deactivate menu item
+     */
+    public boolean setMenuItemActive(int itemId, boolean isActive) {
+        String sql = "UPDATE MenuItem SET is_active = ? WHERE item_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setBoolean(1, isActive);
+            stmt.setInt(2, itemId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating menu item status: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update menu item price
+     */
+    public boolean updateMenuItemPrice(int itemId, BigDecimal newPrice) {
+        String sql = "UPDATE MenuItem SET current_price = ? WHERE item_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setBigDecimal(1, newPrice);
+            stmt.setInt(2, itemId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating menu item price: " + e.getMessage());
+            return false;
+        }
+    }
 }

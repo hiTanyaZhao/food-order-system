@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
 
 import com.foodorder.config.DatabaseConnection;
 import com.foodorder.model.Customer;
@@ -303,5 +304,27 @@ public class CustomerDAO {
         } catch (SQLException e) {
             System.err.println("Error fetching customer statistics: " + e.getMessage());
         }
+    }
+
+    /**
+     * Get customer cumulative spend
+     */
+    public BigDecimal getCustomerCumulativeSpend(int customerId) {
+        String sql = """
+            SELECT COALESCE(SUM(total_amount), 0) as cumulative_spend
+            FROM Orders 
+            WHERE customer_id = ? AND current_status = 'COMPLETED'
+            """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBigDecimal("cumulative_spend");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting customer cumulative spend: " + e.getMessage());
+        }
+        return BigDecimal.ZERO;
     }
 }
