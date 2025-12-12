@@ -1,238 +1,288 @@
-# 餐厅点餐管理系统 (Food Order Management System)
+# Food Order Management System
 
-> 🏆 **CS5200 Database Management Systems 课程项目**  
-> 一个完整的餐厅点餐管理系统，实现了所有6个数据库表的完整CRUD功能
+A database-driven restaurant Food Order Management System built with Java 17 and PostgreSQL, following an MVC + Service + DAO architecture. The system simulates a restaurant’s internal ordering workflow through a Command-Line Interface (CLI) and supports full CRUD operations for customers, employees, menu items, and orders. It also leverages PostgreSQL functions, stored procedures, triggers, and views to enforce business rules and automate calculations.
 
-[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-blue.svg)](https://www.postgresql.org/)
-[![Maven](https://img.shields.io/badge/Maven-3.6+-red.svg)](https://maven.apache.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+## Features
 
-## 🎯 项目概述
+### Customer Management
+- Full CRUD for customers
+- Validations:
+  - Non-empty names
+  - Email format (regex)
+  - Unique email constraint
+- Prevents deletion of customers with existing order history
 
-这是一个采用 **MVC架构** 设计的完整餐厅管理系统，使用 **Java 17 + PostgreSQL** 开发。系统涵盖了餐厅运营的核心业务流程：菜单管理、客户管理、员工管理、订单处理等功能。
+### Menu Management
+- Full CRUD for menu items
+- Category-based organization
+- Activate and deactivate items
+- Dynamic price updates with validation
 
-### ✨ 核心特性
+### Order Management
+- Create orders with multiple items and quantities
+- Automatically assigns an available employee to new orders
+- Automatically calculates order totals via DB triggers and functions
+- Enforced status lifecycle:
+  - PENDING -> ACCEPTED -> PREPARING -> COMPLETED
+  - Controlled transitions to CANCELLED
+- Status validation in both Java service logic and PostgreSQL triggers
 
-- 🍽️ **完整的菜单管理** - 分类浏览、智能搜索、统计分析
-- 📦 **订单全生命周期管理** - 创建、修改、状态跟踪、自动分配
-- 👥 **客户关系管理** - 注册、信息管理、历史订单查询
-- 👨‍💼 **员工管理系统** - 信息管理、状态控制、工作负载统计
-- 📊 **数据分析报告** - 销售统计、热门菜品、业务洞察
+### Employee Management
+- Track employee records and availability status
+- Assignment restricted to employees marked as available
+- Basic load balancing (random or selection-based assignment)
 
-## 🚀 快速开始
+### System Statistics and Reports
+- Total counts of customers, employees, menu items, and orders
+- Revenue by status and by day
+- Top selling menu items
+- Category-level sales
+- Employee workload and performance (backed by SQL views)
 
-### 环境要求
+## Tech Stack
 
-- **Java 17+**
-- **PostgreSQL 12+** 
-- **Maven 3.6+**
+| Component | Technology |
+| --- | --- |
+| Programming Language | Java 17 |
+| Database | PostgreSQL 12+ |
+| Database Connectivity | JDBC |
+| Build Tool | Apache Maven 3.6+ |
+| Architecture | MVC + Service + DAO + Controller layers |
+| User Interface | Command-Line Interface (CLI) |
+| Tooling (optional) | DBeaver |
 
-### 安装步骤
+## System Requirements
 
-1. **克隆项目**
-   ```bash
-   git clone <repository-url>
-   cd food-order-system
-   ```
+To build and run this project, you need:
+- OS: Windows 10+, macOS 12+, or recent Linux distribution
+- Java Development Kit (JDK): Java 17 (e.g., Temurin 17)
+- PostgreSQL Database Server: 12+
+- Apache Maven: 3.6+
+- Optional: DBeaver (for schema inspection and running SQL scripts)
 
-2. **数据库设置**
-   ```sql
-   -- 创建数据库
-   CREATE DATABASE restaurant_db;
-   
-   -- 执行数据库脚本
-   psql -d restaurant_db -f restaurant_db.sql
-   ```
+Expected PostgreSQL local defaults:
+- Host: localhost
+- Port: 5432
+- Default database: postgres (used to create restaurant_db)
+- A database user with permission to create databases and tables (e.g., postgres)
 
-3. **配置数据库连接**
-   
-   编辑 `src/main/java/com/foodorder/config/DatabaseConnection.java`：
-   ```java
-   private static final String URL = "jdbc:postgresql://localhost:5432/restaurant_db";
-   private static final String USERNAME = "your_username";
-   private static final String PASSWORD = "your_password";
-   ```
+## Build and Run Instructions
 
-4. **编译运行**
-   ```bash
-   # 编译项目
-   mvn compile
-   
-   # 运行系统
-   mvn exec:java -Dexec.mainClass="com.foodorder.app.Main"
-   ```
+## Database Setup
 
-## 📊 数据库设计
+### 1) Create database
+Run in psql or DBeaver:
 
-### 表结构 (6个核心表)
+    CREATE DATABASE restaurant_db;
 
-| 表名 | 描述 | 主要字段 |
-|------|------|----------|
-| **Category** | 菜品分类 | `category_id`, `name` |
-| **MenuItem** | 菜品信息 | `item_id`, `category_id`, `item_name`, `current_price`, `is_active` |
-| **Customer** | 客户信息 | `customer_id`, `name`, `email`, `phone` |
-| **Employee** | 员工信息 | `employee_id`, `name`, `phone`, `availability_status` |
-| **Orders** | 订单信息 | `order_id`, `customer_id`, `employee_id`, `order_time`, `total_amount`, `current_status` |
-| **OrderItem** | 订单详情 | `order_id`, `item_id`, `quantity` |
+### 2) Execute schema script (restaurant_db.sql)
 
-### 关系图
+This script creates:
+- Tables: Customer, Employee, Category, MenuItem, Orders, OrderItem
+- Constraints and indexes
+- Functions, stored procedures, triggers, and views used by the application
+
+Option A: Using DBeaver
+1. Create a new PostgreSQL connection
+2. Right-click restaurant_db
+3. Open SQL Editor and execute the contents of restaurant_db.sql
+
+Option B: Using psql
+Run:
+```md
+psql -d restaurant_db -f restaurant_db.sql
 ```
-Category (1) ──── (N) MenuItem (N) ──── (M) OrderItem (M) ──── (1) Orders
-                                                                    │
-Customer (1) ────────────────────────────────────────────────────┘
-                                                                    │
-Employee (1) ────────────────────────────────────────────────────┘
+## Application Configuration
+
+The database connection settings are centralized in:
+```md
+src/main/java/com/foodorder/config/DatabaseConnection.java
 ```
+Update the JDBC URL, username, and password to match your local PostgreSQL credentials:
 
-## 🏗️ 系统架构
-
-```
-📁 src/main/java/com/foodorder/
-├── 📁 app/           # 应用入口
-├── 📁 config/        # 配置管理
-├── 📁 model/         # 数据模型 (6个实体类)
-├── 📁 dao/           # 数据访问层 (5个DAO类)
-├── 📁 service/       # 业务逻辑层 (5个Service类)
-└── 📁 controller/    # 控制层 (4个Controller类)
-```
-
-**严格的MVC三层架构**：
-- **Model层** - 实体类，映射数据库表结构
-- **DAO层** - 数据访问对象，封装SQL操作
-- **Service层** - 业务逻辑处理，数据验证
-- **Controller层** - 用户交互控制，界面管理
-
-## 🎮 功能演示
-
-### 主菜单界面
-```
-==============================================================
-              🏪  餐厅点餐管理系统  🏪
-==============================================================
-1. 📋 菜单浏览与搜索
-2. 📦 订单管理  
-3. 👥 客户管理
-4. 👨‍💼 员工管理
-5. 📊 系统统计
-6. 🚪 退出系统
-==============================================================
+1. Open:
+```md
+src/main/java/com/foodorder/config/DatabaseConnection.java
 ```
 
-### 核心功能模块
-
-#### 1. 📋 菜单管理
-- ✅ 按分类浏览所有菜品
-- ✅ 智能搜索 (名称/分类/价格范围)
-- ✅ 高级组合搜索
-- ✅ 推荐菜品算法
-- ✅ 菜单统计分析
-
-#### 2. 📦 订单管理  
-- ✅ 创建订单 (自动/手动分配员工)
-- ✅ 订单状态管理 (`PENDING` → `ACCEPTED` → `PREPARING` → `COMPLETED`)
-- ✅ 订单项增删改查
-- ✅ 订单历史查询
-- ✅ 实时金额计算
-
-#### 3. 👥 客户管理
-- ✅ 客户注册/管理
-- ✅ 信息管理 (CRUD)
-- ✅ 订单历史追踪
-- ✅ 邮箱唯一性验证
-
-#### 4. 👨‍💼 员工管理
-- ✅ 员工信息管理
-- ✅ 可用状态控制
-- ✅ 工作负载统计
-- ✅ 自动订单分配
-
-#### 5. 📊 数据分析
-- ✅ 系统运营概览
-- ✅ 销售数据统计
-- ✅ 热门菜品排行
-- ✅ 员工绩效分析
-
-## 💡 业务流程示例
-
-### 完整订单处理流程
-
-1. **客户注册** → 2. **浏览菜单** → 3. **创建订单** → 4. **添加菜品** → 5. **员工处理** → 6. **订单完成**
-
-```bash
-# 1. 客户管理 → 注册新客户
-姓名: 张三
-邮箱: zhangsan@email.com  
-电话: 138****1234
-
-# 2. 菜单浏览 → 查看可用菜品
-分类: Main Course
-菜品: Grilled Steak ($24.99)
-
-# 3. 订单管理 → 创建新订单  
-客户: 张三
-员工: 自动分配 → Chef Marco Rossi
-状态: PENDING
-
-# 4. 添加订单项
-菜品: Grilled Steak × 2
-总金额: $49.98
-
-# 5. 状态更新
-PENDING → ACCEPTED → PREPARING → COMPLETED
+3. Update these fields:
+```md
+private static final String URL = "jdbc:postgresql://localhost:5432/restaurant_db";
+private static final String USERNAME = "your_username";
+private static final String PASSWORD = "your_password";
 ```
 
-## 🔧 技术特点
+5. Save the file.
 
-### 数据库设计
-- ✅ **规范化设计** - 符合第三范式(3NF)
-- ✅ **完整性约束** - 外键关系、数据验证
-- ✅ **索引优化** - 提升查询性能
-- ✅ **事务处理** - 保证数据一致性
+Notes:
+- If your PostgreSQL host/port/database differs, update URL accordingly.
+- Make sure the user has permission to access restaurant_db and read/write tables.
 
-### 代码质量
-- ✅ **MVC架构** - 清晰的分层设计
-- ✅ **设计模式** - 单例模式、DAO模式
-- ✅ **异常处理** - 完善的错误处理机制
-- ✅ **代码规范** - 详细注释、统一命名
+## Build Instructions
 
-### 用户体验
-- ✅ **直观界面** - 清晰的菜单导航
-- ✅ **操作反馈** - 详细的成功/错误提示
-- ✅ **数据展示** - 格式化的表格显示
-- ✅ **输入验证** - 友好的参数检查
+From the project root directory (where pom.xml is located):
 
-## 📈 项目亮点
+1. Open a terminal at the project root (same level as pom.xml).
 
-1. **🎯 完整性** - 涵盖餐厅业务全流程，6表完整CRUD
-2. **🏗️ 架构性** - 严格MVC分层，22个类文件组织清晰  
-3. **💼 实用性** - 真实业务场景，可直接部署使用
-4. **🔒 健壮性** - 完善异常处理，数据验证机制
-5. **📊 分析性** - 丰富统计功能，业务洞察支持
-6. **🚀 扩展性** - 良好架构设计，便于功能扩展
+2. Run:
+```md
+mvn clean compile
+```
+What this does:
+- Downloads required Maven dependencies
+- Compiles Java sources under src/main/java
 
-## 📚 文档说明
+## Run Instructions
 
-| 文档 | 描述 |
-|------|------|
-| **README.md** | 项目概述和快速开始 (本文件) |
-| **TECHNICAL_GUIDE.md** | 详细技术文档和使用指南 |
-| **PROJECT_STRUCTURE.md** | 项目结构和架构说明 |
-| **MENU_USAGE.md** | 菜单功能专项说明 |
-| **demo_menu.md** | 菜单功能演示文档 |
+The CLI main entry point class is:
+```md
+src/main/java/com/foodorder/app/Main.java
+```
+1. Ensure PostgreSQL is running and restaurant_db has been created and initialized.
 
-## 🤝 贡献指南
+2. From the project root, run:
+```md
+mvn exec:java -Dexec.mainClass="com.foodorder.app.Main"
+```
+4. After successful startup, the CLI main menu will appear in the console.
 
-欢迎提交 Issue 和 Pull Request 来改进项目！
+If you see an error about exec plugin:
+- Check pom.xml includes exec-maven-plugin configuration
 
-## 📄 许可证
+## Testing Instructions
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+An automated test runner is provided in:
+```md
+src/main/java/com/foodorder/app/TestNewMethods.java
+```
 
-## 👨‍💻 作者
+Option A: Run via IDE (recommended)
+1. Open TestNewMethods.java
+2. Run the class directly
 
-CS5200 Database Management Systems 课程项目
+Option B: Run via Maven (only if tests are configured under src/test/java)
+1. Run:
+```md
+    mvn test
+```
+Notes:
+- This project’s test runner is located under src/main/java, so IDE run is the most direct.
+- All implemented test methods passed in the development environment (per project report).
 
----
+## Project Structure
 
-⭐ 如果这个项目对你有帮助，请给它一个 Star！
+Key files and directories:
+- pom.xml
+  Maven build configuration
+
+- restaurant_db.sql
+  PostgreSQL schema script (tables, constraints, indexes, functions, procedures, triggers, views)
+
+- src/main/java/com/foodorder/app/Main.java
+  CLI entry point
+
+- src/main/java/com/foodorder/config/DatabaseConnection.java
+  JDBC connection configuration
+
+- src/main/java/com/foodorder/app/TestNewMethods.java
+  Test runner for DAO and service methods
+
+Architecture overview:
+- Models: domain objects (Customer, Employee, MenuItem, Orders, etc.)
+- DAO: SQL operations per entity
+- Service: business logic and validation
+- Controllers: CLI flows and user interaction coordination
+
+## Database Design
+
+Core entities:
+- Customer(customer_id PK, name, email UNIQUE, phone)
+- Employee(employee_id PK, name, phone, availability_status)
+- Category(category_id PK, name UNIQUE)
+- MenuItem(item_id PK, category_id FK, item_name, current_price, is_active)
+- Orders(order_id PK, customer_id FK, employee_id FK, order_time, total_amount, current_status)
+- OrderItem(order_id FK, item_id FK, quantity, PRIMARY KEY(order_id, item_id))
+
+Relationships:
+- Customer 1..N Orders
+- Employee 1..N Orders
+- Category 1..N MenuItem
+- Orders N..M MenuItem through OrderItem
+
+Constraints and data quality:
+- Unique constraints: Customer.email, Category.name
+- Check constraints:
+  - MenuItem.current_price >= 0
+  - OrderItem.quantity > 0
+  - Orders.current_status in {PENDING, ACCEPTED, PREPARING, COMPLETED, CANCELLED}
+
+Database programming objects include:
+- Functions:
+  - calculate_order_total(p_order_id)
+  - get_available_employees_count()
+  - get_customer_order_count(p_customer_id)
+  - is_menu_item_available(p_item_id)
+- Stored Procedures:
+  - update_order_total(p_order_id)
+  - assign_employee_to_order(p_order_id)
+- Triggers:
+  - Triggers on OrderItem that update order totals after insert, update, or delete
+  - Trigger on Orders that validates status transitions
+- Views:
+  - order_summary
+  - menu_with_category
+  - employee_workload
+
+## User Flow
+
+Main menu:
+```md
+============================================================
+           Restaurant Order Management System
+============================================================
+1. Menu Browse & Search
+2. Order Management
+3. Customer Management
+4. Employee Management
+5. System Statistics
+6. Exit System
+============================================================
+```
+Typical operations:
+
+Create a new customer:
+1) Main Menu -> Customer Management
+2) Create new customer
+3) Input name, email, phone
+4) System validates and creates the record
+5) New customer_id is displayed
+
+Browse and search menu items:
+1) Main Menu -> Menu Browse & Search
+2) Browse all items or browse by category
+3) Search by partial item name (fuzzy match)
+4) Filter by price range
+5) Add/update/activate/deactivate menu items
+
+Create a new order:
+1) Main Menu -> Order Management
+2) Create new order
+3) Select an existing customer
+4) System assigns an available employee
+5) Add menu items with quantities
+6) Status starts as PENDING
+7) DB triggers and functions compute total_amount automatically
+
+Employee management:
+1) Main Menu -> Employee Management
+2) Create/update employee records
+3) Set availability status (available or unavailable)
+4) View employee workload and performance (backed by employee_workload view)
+
+System statistics:
+1) Main Menu -> System Statistics
+2) View counts, revenue summaries, top selling items, category sales, and employee metrics
+
+## Course Info
+CS5200 Fall 2025
+Final Project: Food Order Management System
